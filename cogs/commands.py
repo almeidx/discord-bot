@@ -1,14 +1,16 @@
-import discord, random
+import discord, random, json
 from discord.ext import commands
 
 async def is_owner(ctx):
-    return ctx.author.id == 385132696135008259
+    with open('config.json', 'r') as c:
+        config = json.load(c)
+    return ctx.author.id == config['OWNER_ID']
 
 class Commands(commands.Cog):
     def __init__(self, client):
         self.client = client
 
-    @commands.command()
+    @commands.command(aliases=['pong'])
     async def ping(self, ctx):
         await ctx.send(f'Pong! {round(self.client.latency * 1000)}ms')
 
@@ -59,6 +61,15 @@ class Commands(commands.Cog):
                 await ctx.send(f'Unbanned {member.mention}')
                 return
 
+    @commands.command(aliases=['prefix', 'setprefix'])
+    async def changeprefix(self, ctx, prefix):
+        with open('prefixes.json', 'r') as file:
+            prefixes = json.load(file)
+        prefixes[str(ctx.guild.id)] = prefix
+        with open('prefixes.json', 'w') as file:
+            json.dump(prefixes, file, indent=2)
+        await ctx.send(f'The prefix has been changed to: {prefix}')
+
     @commands.command()
     @commands.check(is_owner)
     async def test(self, ctx):
@@ -66,4 +77,3 @@ class Commands(commands.Cog):
 
 def setup(client):
     client.add_cog(Commands(client))
-
